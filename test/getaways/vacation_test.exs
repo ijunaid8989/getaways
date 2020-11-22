@@ -81,4 +81,69 @@ defmodule Getaways.VacationTest do
       assert %Ecto.Changeset{} = Vacation.change_place(place)
     end
   end
+
+  describe "bookings" do
+    alias Getaways.Vacation.Booking
+
+    @valid_attrs %{end_date: ~D[2010-04-17], start_date: ~D[2010-04-17], state: "some state", total_price: "120.5"}
+    @update_attrs %{end_date: ~D[2011-05-18], start_date: ~D[2011-05-18], state: "some updated state", total_price: "456.7"}
+    @invalid_attrs %{end_date: nil, start_date: nil, state: nil, total_price: nil}
+
+    def booking_fixture(attrs \\ %{}) do
+      {:ok, booking} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Vacation.create_booking()
+
+      booking
+    end
+
+    test "list_bookings/0 returns all bookings" do
+      booking = booking_fixture()
+      assert Vacation.list_bookings() == [booking]
+    end
+
+    test "get_booking!/1 returns the booking with given id" do
+      booking = booking_fixture()
+      assert Vacation.get_booking!(booking.id) == booking
+    end
+
+    test "create_booking/1 with valid data creates a booking" do
+      assert {:ok, %Booking{} = booking} = Vacation.create_booking(@valid_attrs)
+      assert booking.end_date == ~D[2010-04-17]
+      assert booking.start_date == ~D[2010-04-17]
+      assert booking.state == "some state"
+      assert booking.total_price == Decimal.new("120.5")
+    end
+
+    test "create_booking/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Vacation.create_booking(@invalid_attrs)
+    end
+
+    test "update_booking/2 with valid data updates the booking" do
+      booking = booking_fixture()
+      assert {:ok, %Booking{} = booking} = Vacation.update_booking(booking, @update_attrs)
+      assert booking.end_date == ~D[2011-05-18]
+      assert booking.start_date == ~D[2011-05-18]
+      assert booking.state == "some updated state"
+      assert booking.total_price == Decimal.new("456.7")
+    end
+
+    test "update_booking/2 with invalid data returns error changeset" do
+      booking = booking_fixture()
+      assert {:error, %Ecto.Changeset{}} = Vacation.update_booking(booking, @invalid_attrs)
+      assert booking == Vacation.get_booking!(booking.id)
+    end
+
+    test "delete_booking/1 deletes the booking" do
+      booking = booking_fixture()
+      assert {:ok, %Booking{}} = Vacation.delete_booking(booking)
+      assert_raise Ecto.NoResultsError, fn -> Vacation.get_booking!(booking.id) end
+    end
+
+    test "change_booking/1 returns a booking changeset" do
+      booking = booking_fixture()
+      assert %Ecto.Changeset{} = Vacation.change_booking(booking)
+    end
+  end
 end
