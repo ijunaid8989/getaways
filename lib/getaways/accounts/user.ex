@@ -16,7 +16,7 @@ defmodule Getaways.Accounts.User do
 
   @doc false
   def changeset(user, attrs) do
-    required_fields = [:username, :email, :password_hash]
+    required_fields = [:username, :email, :password]
     user
     |> cast(attrs, required_fields)
     |> validate_required(required_fields)
