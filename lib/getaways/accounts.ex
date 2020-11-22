@@ -8,6 +8,17 @@ defmodule Getaways.Accounts do
 
   alias Getaways.Accounts.User
 
+  def authenticate(username, password) do
+    user = Repo.get_by(User, username: username)
+
+    with %{password_hash: password_hash} <- user,
+      true <- Pnkdf2.verify_pass(password, password_hash) do
+      {:ok, user}
+    else
+      _ -> :error
+    end
+  end
+
   @doc """
   Returns the list of users.
 
