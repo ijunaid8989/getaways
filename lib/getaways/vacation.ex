@@ -10,7 +10,7 @@ defmodule Getaways.Vacation do
   alias Getaways.Accounts.User
 
   def get_place_by_slug!(slug) do
-    Repo.get_by!(Place, slug: slug)
+    Repo.get_by!(Place, slug: slug) |> Repo.preload(:bookings)
   end
 
   def list_places(criteria) do
@@ -26,6 +26,14 @@ defmodule Getaways.Vacation do
       {:order, order}, query ->
         from p in query, order_by: [{^order, :id}]
     end)
+    |> Repo.all()
+    |> Repo.preload(:bookings)
+  end
+
+  def bookings_for_place(%Place{} = place) do
+    Booking
+    |> where(place_id: ^place.id)
+    |> where(state: "reserved")
     |> Repo.all()
   end
 
