@@ -40,7 +40,7 @@ defmodule Getaways.Vacation do
   defp filter_with(filters, query) do
     Enum.reduce(filters, query, fn
       {:matching, term}, query ->
-        pattern = "%#{term}"
+        pattern = "%#{term}%"
 
         from q in query,
           where:
