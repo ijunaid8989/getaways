@@ -23,6 +23,30 @@ defmodule GetawaysWeb.Schema.Schema do
     end
   end
 
+  mutation do
+    @desc "Create a booking for a place"
+    field :create_booking, :booking do
+      arg :place_id, non_null(:id)
+      arg :start_date, non_null(:date)
+      arg :end_date, non_null(:date)
+      resolve &Resolvers.Vacation.create_booking/3
+    end
+
+    @desc "Cancel a booking"
+    field :cancel_booking, :booking do
+      arg :booking_id, non_null(:id)
+      resolve &Resolvers.Vacation.cancel_booking/3
+    end
+
+    @desc "Create a review for a place"
+    field :create_review, :review do
+      arg :place_id, non_null(:id)
+      arg :comment, :string
+      arg :rating, non_null(:integer)
+      resolve &Resolvers.Vacation.create_review/3
+    end
+  end
+
   input_object :place_filter do
     field :matching, :string
     field :wifi, :boolean
@@ -55,14 +79,17 @@ defmodule GetawaysWeb.Schema.Schema do
     field :price_per_night, non_null(:decimal)
     field :image, non_null(:string)
     field :image_thumbnail, non_null(:string)
-    field :bookings, list_of(:booking), resolve: dataloader(Vacation)
+    field :bookings, list_of(:booking) do
+      arg :limit, type: :integer, default_value: 100
+      resolve dataloader(Vacation, :bookings, args: %{scope: :place})
+    end
     field :reviews, list_of(:review), resolve: dataloader(Vacation)
   end
 
   object :user do
     field :username, non_null(:string)
     field :email, non_null(:string)
-    field :bookings, list_of(:booking), resolve: dataloader(Vacation)
+    field :bookings, list_of(:booking), resolve: dataloader(Vacation, :bookings, args: %{scope: :user})
     field :reviews, list_of(:review), resolve: dataloader(Vacation)
   end
 
@@ -86,10 +113,11 @@ defmodule GetawaysWeb.Schema.Schema do
   end
 
   def context(ctx) do
-    source = Dataloader.Ecto.new(Getaways.Repo)
+    ctx = Map.put(ctx, :current_user, Getaways.Accounts.get_user!(1))
     loader =
       Dataloader.new
-      |> Dataloader.add_source(Vacation, source)
+      |> Dataloader.add_source(Vacation, Vacation.datasource())
+      |> Dataloader.add_source(Accounts, Accounts.datasource())
     Map.put(ctx, :loader, loader)
   end
 

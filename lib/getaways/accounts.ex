@@ -19,6 +19,13 @@ defmodule Getaways.Accounts do
     end
   end
 
+  def datasource() do
+    Dataloader.Ecto.new(Repo, query: &query/2)
+  end
+
+  def query(queryable, _) do
+    queryable
+  end
   @doc """
   Returns the list of users.
 
